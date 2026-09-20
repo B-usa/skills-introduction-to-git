@@ -44,6 +44,9 @@ let dropCounter = 0;
 let dropInterval = 1000;
 let lastTime = 0;
 let targetPattern = null;
+let highScore = 0;
+let level = 1;
+let patternsCleared = 0;
 
 // Initialize game
 function init() {
@@ -51,6 +54,10 @@ function init() {
   ctx = canvas.getContext("2d");
   patternCanvas = document.getElementById("patternCanvas");
   patternCtx = patternCanvas.getContext("2d");
+
+  // Load high score from localStorage
+  highScore = parseInt(localStorage.getItem("stackOverflowHighScore")) || 0;
+  document.getElementById("high-score").textContent = highScore;
 
   // Initialize empty board
   board = Array(ROWS)
@@ -269,6 +276,12 @@ function checkPatternMatch() {
       if (matchesPattern(startRow, startCol)) {
         clearPattern(startRow, startCol);
         score += 100;
+        patternsCleared++;
+        if (patternsCleared % 5 === 0) {
+          level++;
+          dropInterval = Math.max(200, 1000 - (level - 1) * 100);
+          document.getElementById("level").textContent = level;
+        }
         updateScore();
         setNewTargetPattern();
         return;
@@ -307,6 +320,13 @@ function clearPattern(startRow, startCol) {
 // Update score display
 function updateScore() {
   document.getElementById("score").textContent = score;
+
+  // Update high score if current score exceeds it
+  if (score > highScore) {
+    highScore = score;
+    document.getElementById("high-score").textContent = highScore;
+    localStorage.setItem("stackOverflowHighScore", highScore);
+  }
 }
 
 // Handle keyboard input
@@ -345,7 +365,8 @@ function handleKeyPress(e) {
 // Toggle pause
 function togglePause() {
   isPaused = !isPaused;
-  document.getElementById("status").textContent = isPaused ? "Paused" : "Playing...";
+  const statusEl = document.getElementById("status");
+  if (statusEl) statusEl.textContent = isPaused ? "Paused" : "Playing...";
 }
 
 // End game
